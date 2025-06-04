@@ -2,7 +2,10 @@ export async function addFlight(from: string, to: string, departure_time: string
   const departureDateTime = `${departure_date}T${departure_time}:00`;
   const arrivalDateTime = `${arrival_date}T${arrival_time}:00`;
   
-  
+    console.log(JSON.stringify({
+    from, to, departureDateTime, arrivalDateTime, price, seats_total
+  }));
+
   const res = await fetch("http://localhost:5000/flights/add-flight", {
     method: "POST",
     headers: {
@@ -13,8 +16,8 @@ export async function addFlight(from: string, to: string, departure_time: string
 
   if (!res.ok) {
     const errorData = await res.json();
-    throw new Error(errorData.error || "Failed to delete flight");
+    throw new Error(errorData.error || errorData.error);
   }
 }
 
-//backend creates the id itself
+//backend creates the id itselfx

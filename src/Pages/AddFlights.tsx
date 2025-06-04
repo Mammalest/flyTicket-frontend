@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { addFlight } from "../utils/flight_add";
 import { useNavigate } from "react-router-dom";
+import { fetchCities } from "../utils/cities_get";
 
 type AvailabilityMessage = {
   text: string;
@@ -8,6 +9,7 @@ type AvailabilityMessage = {
 } | null;
 
 export default function AddFlights() {
+  const [cities, setCities] = useState<string[]>([]);
   const navigate = useNavigate();
   // Left side inputs
   const [from, setFrom] = useState("");
@@ -16,6 +18,17 @@ export default function AddFlights() {
   const [departureTime, setDepartureTime] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
   const [arrivalTime, setArrivalTime] = useState("");
+
+  useEffect(() => {
+    fetchCities()
+      .then((data) => {
+        console.log("Fetched cities:", data); // <-- Add this
+        setCities(data);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch cities:", err);
+      });
+  }, []);
 
   // Right side inputs (integers only)
   const [seatsTotal, setSeatsTotal] = useState<number | "">("");
@@ -89,10 +102,18 @@ export default function AddFlights() {
         departureTime,
         departureDate,
         arrivalTime,
-        arrivalTime,
+        arrivalDate,
         price as number,
         seatsTotal as number
       );
+      console.log(from);
+      console.log(to);
+      console.log(departureTime);
+      console.log(departureDate);
+      console.log(arrivalTime);
+      console.log(arrivalDate);
+      console.log(price);
+      console.log(seatsTotal);
 
       setAvailabilityMessage({
         text: "Uçuş başarıyla eklendi!",
@@ -160,9 +181,11 @@ export default function AddFlights() {
               onChange={(e) => setFrom(e.target.value)}
             >
               <option value="">Seç...</option>
-              <option value="Antalya">Antalya</option>
-              <option value="Izmir">İzmir</option>
-              <option value="Istanbul">İstanbul</option>
+              {cities.map((cityName, idx) => (
+                <option key={idx} value={cityName}>
+                  {cityName}
+                </option>
+              ))}
             </select>
 
             <label className="btn btn-outline-secondary" htmlFor="to">
@@ -175,9 +198,11 @@ export default function AddFlights() {
               onChange={(e) => setTo(e.target.value)}
             >
               <option value="">Seç...</option>
-              <option value="Antalya">Antalya</option>
-              <option value="Izmir">İzmir</option>
-              <option value="Istanbul">İstanbul</option>
+              {cities.map((cityName, idx) => (
+                <option key={idx} value={cityName}>
+                  {cityName}
+                </option>
+              ))}
             </select>
           </div>
 

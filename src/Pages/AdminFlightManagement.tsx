@@ -4,7 +4,7 @@ import FlightsGrid from "../Components/FlightsGrid";
 import { fetchCities } from "../utils/cities_get";
 
 export default function AdminFlightManagement() {
-  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [departureDate, setDepartureDate] = useState("");
@@ -45,9 +45,9 @@ export default function AdminFlightManagement() {
             onChange={(e) => setFrom(e.target.value)}
           >
             <option value="">Seç...</option>
-            {cities.map((city) => (
-              <option key={city.id} value={city.id}>
-                {city.name}
+            {cities.map((cityName, idx) => (
+              <option key={idx} value={cityName}>
+                {cityName}
               </option>
             ))}
           </select>
@@ -65,9 +65,9 @@ export default function AdminFlightManagement() {
             onChange={(e) => setTo(e.target.value)}
           >
             <option value="">Seç...</option>
-            {cities.map((city) => (
-              <option key={city.id} value={city.id}>
-                {city.name}
+            {cities.map((cityName, idx) => (
+              <option key={idx} value={cityName}>
+                {cityName}
               </option>
             ))}
           </select>
