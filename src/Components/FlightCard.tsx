@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { deleteFlight } from "../utils/flight_delete";
 
 type FlightCardProps = {
@@ -23,6 +24,7 @@ function FlightCard({
   seats_available,
   is_admin,
 }: FlightCardProps) {
+  const navigate = useNavigate();
   const handleDelete = async () => {
     try {
       await deleteFlight(id);
@@ -51,7 +53,7 @@ function FlightCard({
         {is_admin ? (
           <div className="row">
             <div className="col">
-              <button type="button" className="btn btn-primary w-100">
+              <button  type="button"  className="btn btn-primary w-100" onClick={() => navigate(`/editflight/${id}`)}>
                 Edit
               </button>
             </div>

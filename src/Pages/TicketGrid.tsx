@@ -1,33 +1,40 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import TicketCard from "../Components/TicketCard";
-import { getTicketsById } from "../utils/get_tickets_by_email";
+import { getTicketfomEmail } from "../utils/get_tickets_by_email";
 
-type TicketCard = {
+export type TicketCardType = {
   ticket_id: string;
-  id: string;
+  flight_id: string;
   from: string;
   to: string;
   departure_time: string;
   arrival_time: string;
+  departure_date: string;
+  arrival_date: string;
+  price: number;
+  seats_total: number;
 };
 
-type TicketPageProps = {
-  passenger_email: string;
-};
+const TICKETS_PER_PAGE = 40;
 
-const Tickets_per_page = 40;
+export default function TicketPage() {
+  const [searchParams] = useSearchParams();
+  const passenger_email = searchParams.get("email") || "";
 
-function TicketPage({ passenger_email }: TicketPageProps) {
-  const [tickets, setTickets] = useState<TicketCard[]>([]);
+  const [tickets, setTickets] = useState<TicketCardType[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
+    if (!passenger_email) return; // No email? Don't fetch
+
     const fetchTickets = async () => {
       setLoading(true);
       try {
-        const data: TicketCard[] = await getTicketsById(passenger_email)
-        setTickets(data); // store in state
+        const data = await getTicketfomEmail(passenger_email);
+        setTickets(data);
+        setCurrentPage(1); // reset page on new search
       } catch (error) {
         console.error("Error fetching tickets:", error);
       } finally {
@@ -36,13 +43,15 @@ function TicketPage({ passenger_email }: TicketPageProps) {
     };
 
     fetchTickets();
-  }, [passenger_email]); // dependency array
+  }, [passenger_email]);
+
+  if (!passenger_email) return <div>Please provide an email in the query parameter.</div>;
 
   if (loading) return <div>Loading tickets...</div>;
 
-  const totalPages = Math.ceil(tickets.length / Tickets_per_page);
-  const startIndex = (currentPage - 1) * Tickets_per_page;
-  const currentTickets = tickets.slice(startIndex, startIndex + Tickets_per_page);
+  const totalPages = Math.ceil(tickets.length / TICKETS_PER_PAGE);
+  const startIndex = (currentPage - 1) * TICKETS_PER_PAGE;
+  const currentTickets = tickets.slice(startIndex, startIndex + TICKETS_PER_PAGE);
 
   const rows = [];
   for (let i = 0; i < currentTickets.length; i += 4) {
@@ -51,12 +60,13 @@ function TicketPage({ passenger_email }: TicketPageProps) {
 
   return (
     <div className="container-fluid">
+      <h2 className="mb-4">Tickets for: {passenger_email}</h2>
       {rows.map((rowTickets, rowIndex) => (
         <div className="row mb-3" key={rowIndex}>
           {rowTickets.map((ticket) => (
             <div
               className="col-12 col-sm-6 col-md-4 col-lg-3 mb-3"
-              key={ticket.id}
+              key={ticket.ticket_id}
             >
               <TicketCard {...ticket} />
             </div>
@@ -85,5 +95,3 @@ function TicketPage({ passenger_email }: TicketPageProps) {
     </div>
   );
 }
-
-export default TicketPage;

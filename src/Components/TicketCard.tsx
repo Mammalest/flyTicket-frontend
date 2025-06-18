@@ -1,32 +1,28 @@
-import { deleteTicket } from "../utils/ticket_delete";
-
 type TicketCardProps = {
   ticket_id: string;
-  id: string;
+  flight_id: string;
   from: string;
   to: string;
   departure_time: string;
   arrival_time: string;
+  departure_date: string;
+  arrival_date: string;
+  price: number;
+  seats_total: number;
 };
 
 function TicketCard({
   ticket_id,
-  id,
+  flight_id,
   from,
   to,
   departure_time,
   arrival_time,
+  departure_date,
+  arrival_date,
+  price,
+  seats_total,
 }: TicketCardProps) {
-  const handleDelete = async () => {
-    try {
-      await deleteTicket(ticket_id);
-      alert(" Ticket deleted successfully");
-      // not refreshing the flight list
-    } catch (error) {
-      alert("Failed to delete ticket: " + (error as Error).message);
-    }
-  };
-
   return (
     <div className="card h-100 mb-3 shadow-sm">
       <div className="card-body d-flex flex-column">
@@ -35,22 +31,16 @@ function TicketCard({
         </h5>
         <p className="card-text mb-4">
           <strong>Ticket ID:</strong> {ticket_id} <br />
-          <strong>ID:</strong> {id} <br />
-          <strong>Departure:</strong>{" "}
-          {new Date(departure_time).toLocaleString()}
+          <strong>Flight ID:</strong> {flight_id} <br />
+          <strong>Departure Date & Time:</strong>{" "}
+          {new Date(`${departure_date}T${departure_time}`).toLocaleString()}
           <br />
-          <strong>Arrival:</strong> {new Date(arrival_time).toLocaleString()}{" "}
+          <strong>Arrival Date & Time:</strong>{" "}
+          {new Date(`${arrival_date}T${arrival_time}`).toLocaleString()}
           <br />
+          <strong>Price:</strong> ${price} <br />
+          <strong>Seats Total:</strong> {seats_total}
         </p>
-        <div className="col">
-          <button
-            type="button"
-            className="btn btn-danger w-100"
-            onClick={handleDelete}
-          >
-            Cancel
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -38,7 +38,7 @@ function FlightsGrid({
         const res = await fetch("http://localhost:5000/flights/get-flights");
         const data: FlightCard[] = await res.json();
 
-        // Filter on client side
+        // frontend filter
         const filtered = data.filter((flight) => {
           const matchesFrom = !from || flight.from === from;
           const matchesTo = !to || flight.to === to;
@@ -59,7 +59,7 @@ function FlightsGrid({
     };
 
     fetchFlights();
-  }, [from, to, departure_date]); // refetch when inputs change
+  }, [from, to, departure_date]); // refresh on change
 
   if (loading) return <div>Loading flights...</div>;
 

@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
-import { addFlight } from "../utils/flight_add";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { fetchCities } from "../utils/cities_get";
+import { addFlight } from "../utils/flight_add";
+import { editFlight } from "../utils/edit_flight";
+import { getFlightFromId } from "../utils/get_flight_from_id";
 
 type AvailabilityMessage = {
   text: string;
   isError: boolean;
 } | null;
 
-export default function AddFlights() {
+export default function EditFlight() {
+  const {flight_id: flightId} = useParams();
   const [cities, setCities] = useState<string[]>([]);
   const navigate = useNavigate();
+
   // Left side inputs
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -19,18 +23,7 @@ export default function AddFlights() {
   const [arrivalDate, setArrivalDate] = useState("");
   const [arrivalTime, setArrivalTime] = useState("");
 
-  useEffect(() => {
-    fetchCities()
-      .then((data) => {
-        console.log("Fetched cities:", data); // <-- Add this
-        setCities(data);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch cities:", err);
-      });
-  }, []);
-
-  // Right side inputs (integers only)
+  // Right side inputs
   const [seatsTotal, setSeatsTotal] = useState<number | "">("");
   const [price, setPrice] = useState<number | "">("");
 
@@ -38,8 +31,36 @@ export default function AddFlights() {
     useState<AvailabilityMessage>(null);
   const [loading, setLoading] = useState(false);
 
+  // Fetch cities and flight (if editing)
+  useEffect(() => {
+    fetchCities()
+      .then((data) => setCities(data))
+      .catch((err) => console.error("Failed to fetch cities:", err));
+  }, []);
+
+  useEffect(() => {
+    if (flightId && cities.length > 0) {
+      getFlightFromId(flightId)
+        .then((flight) => {
+          setFrom(flight.from);
+          setTo(flight.to);
+          setDepartureDate(flight.departure_date);
+          setDepartureTime(flight.departure_time);
+          setArrivalDate(flight.arrival_date);
+          setArrivalTime(flight.arrival_time);
+          setSeatsTotal(flight.seats_total);
+          setPrice(flight.price);
+        })
+        .catch(() =>
+          setAvailabilityMessage({
+            text: "Uçuş bilgisi alınamadı.",
+            isError: true,
+          })
+        );
+    }
+  }, [flightId, cities]);
+
   const checkAvailability = () => {
-    // Example: simple validations
     if (!from || !to) {
       setAvailabilityMessage({
         text: "Lütfen kalkış ve varış yerlerini seçin.",
@@ -69,14 +90,11 @@ export default function AddFlights() {
       return;
     }
 
-    // Simulate availability check success
     setAvailabilityMessage({ text: "Uçuş uygun!", isError: false });
   };
 
-  const handleAddFlight = async () => {
+  const handleSubmit = async () => {
     setAvailabilityMessage(null);
-
-    // Validate inputs
     if (
       !from ||
       !to ||
@@ -96,46 +114,36 @@ export default function AddFlights() {
 
     try {
       setLoading(true);
-      await addFlight(
-        from,
-        to,
-        departureTime,
-        departureDate,
-        arrivalTime,
-        arrivalDate,
-        price as number,
-        seatsTotal as number
-      );
-      console.log(from);
-      console.log(to);
-      console.log(departureTime);
-      console.log(departureDate);
-      console.log(arrivalTime);
-      console.log(arrivalDate);
-      console.log(price);
-      console.log(seatsTotal);
-
-      setAvailabilityMessage({
-        text: "Uçuş başarıyla eklendi!",
-        isError: false,
-      });
-
-      // Show alert, then navigate back to main page
-      alert("Uçuş başarıyla eklendi!");
+      if (flightId) {
+        await editFlight(
+          flightId,
+          from,
+          to,
+          departureTime,
+          departureDate,
+          arrivalTime,
+          arrivalDate,
+          price as number,
+          seatsTotal as number
+        );
+        alert("Uçuş başarıyla güncellendi!");
+      } else {
+        await addFlight(
+          from,
+          to,
+          departureTime,
+          departureDate,
+          arrivalTime,
+          arrivalDate,
+          price as number,
+          seatsTotal as number
+        );
+        alert("Uçuş başarıyla eklendi!");
+      }
       navigate("/");
-
-      // Reset form (optional if you navigate away)
-      setFrom("");
-      setTo("");
-      setDepartureDate("");
-      setDepartureTime("");
-      setArrivalDate("");
-      setArrivalTime("");
-      setSeatsTotal("");
-      setPrice("");
     } catch (error: any) {
       setAvailabilityMessage({
-        text: error.message || "Uçuş eklenirken hata oluştu.",
+        text: error.message || "Bir hata oluştu.",
         isError: true,
       });
     } finally {
@@ -143,7 +151,6 @@ export default function AddFlights() {
     }
   };
 
-  // Helper for integer inputs
   const handleIntegerChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: React.Dispatch<React.SetStateAction<number | "">>
@@ -151,19 +158,18 @@ export default function AddFlights() {
     const val = e.target.value;
     if (val === "") {
       setter("");
-      return;
-    }
-    // Only allow digits
-    if (/^\d+$/.test(val)) {
+    } else if (/^\d+$/.test(val)) {
       setter(Number(val));
     }
   };
 
   return (
     <div className="d-flex flex-column align-items-center justify-content-center vh-100">
-      {/* Title above */}
       <h1 className="mb-4">FlyTicket Admin</h1>
-      <h4 className="mb-4 pb-5">Flight Creation</h4>
+      <h4 className="mb-4 pb-5">
+        {flightId ? "Uçuşu Düzenle" : "Yeni Uçuş Oluştur"}
+      </h4>
+
       <div
         className="d-flex align-items-start border rounded bg-light shadow-sm ps-4 pe-4 pt-4 pb-4"
         style={{ height: "auto", maxWidth: "1500px", width: "100%" }}
@@ -268,7 +274,7 @@ export default function AddFlights() {
           </div>
         </div>
 
-        {/* Vertical Divider */}
+        {/* Divider */}
         <div className="vr mx-3"></div>
 
         {/* Right Column */}
@@ -277,7 +283,6 @@ export default function AddFlights() {
             <span className="input-group-text">Seats Total</span>
             <input
               className="form-control"
-              aria-label="Seats Total"
               value={seatsTotal}
               onChange={(e) => handleIntegerChange(e, setSeatsTotal)}
               inputMode="numeric"
@@ -288,7 +293,6 @@ export default function AddFlights() {
             <span className="input-group-text">Price</span>
             <input
               className="form-control"
-              aria-label="Price"
               value={price}
               onChange={(e) => handleIntegerChange(e, setPrice)}
               inputMode="numeric"
@@ -300,10 +304,14 @@ export default function AddFlights() {
             <button
               type="button"
               className="btn btn-primary w-50"
-              onClick={handleAddFlight}
+              onClick={handleSubmit}
               disabled={loading}
             >
-              {loading ? "Adding..." : "Set"}
+              {loading
+                ? "İşleniyor..."
+                : flightId
+                ? "Uçuşu Güncelle"
+                : "Uçuş Ekle"}
             </button>
           </div>
         </div>
